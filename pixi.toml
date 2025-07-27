@@ -1,0 +1,12 @@
+[project]
+authors = ["Ethan Orlowsky <ethaniorlowsky@gmail.com>"]
+channels = ["conda-forge"]
+name = "blue-bikes"
+platforms = ["linux-64"]
+version = "0.1.0"
+
+[tasks]
+stations = "python parse_stations.py"
+
+[dependencies]
+python = ">=3.13.5,<3.14"
