@@ -1,0 +1,6 @@
+stop_number,station_name,lat,lng,distance_to_next_km,cumulative_distance_km
+0,101 Smith Place,42.392568,-71.150761,12.067,0.0
+1,160 Arsenal St,42.364664,-71.175693,2.071,12.067
+2,175 N Harvard St,42.364474,-71.128408,2.026,14.138
+3,1200 Beacon St,42.344148,-71.114673,5.109,16.164
+4,191 Beacon St,42.380323,-71.108786,2.523,21.273

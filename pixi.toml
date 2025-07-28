@@ -6,10 +6,13 @@ platforms = ["linux-64"]
 version = "0.1.0"
 
 [tasks]
-stations = "python parse_stations.py"
-distance-matrix = "python make_distance_matrix.py"
-directions = "python get_directions.py"
-osrm-trip = "python get_osrm_trip.py"
+distance-matrix = "python scripts/preprocessing/make_distance_matrix.py"
+
+shortest-distance = "python scripts/tsp/get_shortest_distance_route.py"
+osrm = "python scripts/tsp/get_osrm_route.py"
+haversine = "python scripts/tsp/get_haversine_route.py"
+
+directions = "python scripts/tsp/get_directions.py"
 
 [dependencies]
 python = ">=3.13.5,<3.14"

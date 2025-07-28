@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-glyphicons.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.0/css/all.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/python-visualization/folium/folium/templates/leaflet.awesome.rotate.min.css"/>
+    
+            <meta name="viewport" content="width=device-width,
+                initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+            <style>
+                #map_1e2ed742dd0341b04eaa3a4f8455dec2 {
+                    position: relative;
+                    width: 100.0%;
+                    height: 100.0%;
+                    left: 0.0%;
+                    top: 0.0%;
+                }
+                .leaflet-container { font-size: 1rem; }
+            </style>
+
+            <style>html, body {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            </style>
+
+            <style>#map {
+                position:absolute;
+                top:0;
+                bottom:0;
+                right:0;
+                left:0;
+                }
+            </style>
+
+            <script>
+                L_NO_TOUCH = false;
+                L_DISABLE_3D = false;
+            </script>
+
+        
+    <script src="https://cdn.jsdelivr.net/npm/leaflet-textpath@1.2.3/leaflet.textpath.min.js"></script>
+</head>
+<body>
+    
+    
+    <div style="position: fixed; 
+                bottom: 50px; left: 50px; width: 150px; height: 90px; 
+                background-color: white; border:2px solid grey; z-index:9999; 
+                font-size:14px; padding: 10px">
+    <p><b>Legend</b></p>
+    <p><i class="fa fa-bicycle" style="color:blue"></i> Station</p>
+    <p><i class="fa fa-bicycle" style="color:red"></i> Route Stop</p>
+    <p><span style="color:red; font-weight:bold;">—</span> TSP Route</p>
+    </div>
+    
+    
+            <div class="folium-map" id="map_1e2ed742dd0341b04eaa3a4f8455dec2" ></div>
+        
+</body>
+<script>
+    
+    
+            var map_1e2ed742dd0341b04eaa3a4f8455dec2 = L.map(
+                "map_1e2ed742dd0341b04eaa3a4f8455dec2",
+                {
+                    center: [42.3692354, -71.1356642],
+                    crs: L.CRS.EPSG3857,
+                    ...{
+  "zoom": 13,
+  "zoomControl": true,
+  "preferCanvas": false,
+}
+
+                }
+            );
+
+            
+
+        
+    
+            var tile_layer_6d38c701d4509effd94fa0d943900f0d = L.tileLayer(
+                "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                {
+  "minZoom": 0,
+  "maxZoom": 19,
+  "maxNativeZoom": 19,
+  "noWrap": false,
+  "attribution": "\u0026copy; \u003ca href=\"https://www.openstreetmap.org/copyright\"\u003eOpenStreetMap\u003c/a\u003e contributors",
+  "subdomains": "abc",
+  "detectRetina": false,
+  "tms": false,
+  "opacity": 1,
+}
+
+            );
+        
+    
+            tile_layer_6d38c701d4509effd94fa0d943900f0d.addTo(map_1e2ed742dd0341b04eaa3a4f8455dec2);
+        
+    
+            var marker_7f1050e89072fb737e3c0717fbae1777 = L.marker(
+                [42.392568, -71.150761],
+                {
+}
+            ).addTo(map_1e2ed742dd0341b04eaa3a4f8455dec2);
+        
+    
+            var icon_e2431e23a5c83b247f90f400b48dd533 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "blue",
+  "iconColor": "white",
+  "icon": "bicycle",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_590fbb96ab6bff8642d17eb7a714ad54 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_c87025d76909e7134565c664cd385f19 = $(`<div id="html_c87025d76909e7134565c664cd385f19" style="width: 100.0%; height: 100.0%;"><b>101 Smith Place</b><br>Lat: 42.392568<br>Lng: -71.150761</div>`)[0];
+                popup_590fbb96ab6bff8642d17eb7a714ad54.setContent(html_c87025d76909e7134565c664cd385f19);
+            
+        
+
+        marker_7f1050e89072fb737e3c0717fbae1777.bindPopup(popup_590fbb96ab6bff8642d17eb7a714ad54)
+        ;
+
+        
+    
+    
+            marker_7f1050e89072fb737e3c0717fbae1777.bindTooltip(
+                `<div>
+                     101 Smith Place
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_7f1050e89072fb737e3c0717fbae1777.setIcon(icon_e2431e23a5c83b247f90f400b48dd533);
+            
+    
+            var marker_0b83c7022736fb30ebece34634c8d59c = L.marker(
+                [42.344148, -71.114673],
+                {
+}
+            ).addTo(map_1e2ed742dd0341b04eaa3a4f8455dec2);
+        
+    
+            var icon_b799296257471d508d5f5627d483d124 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "blue",
+  "iconColor": "white",
+  "icon": "bicycle",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_81fa1332857e5a3a196c2410bb4a926d = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_6a53de0d28e404477ed13ae021cc4e34 = $(`<div id="html_6a53de0d28e404477ed13ae021cc4e34" style="width: 100.0%; height: 100.0%;"><b>1200 Beacon St</b><br>Lat: 42.344148<br>Lng: -71.114673</div>`)[0];
+                popup_81fa1332857e5a3a196c2410bb4a926d.setContent(html_6a53de0d28e404477ed13ae021cc4e34);
+            
+        
+
+        marker_0b83c7022736fb30ebece34634c8d59c.bindPopup(popup_81fa1332857e5a3a196c2410bb4a926d)
+        ;
+
+        
+    
+    
+            marker_0b83c7022736fb30ebece34634c8d59c.bindTooltip(
+                `<div>
+                     1200 Beacon St
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_0b83c7022736fb30ebece34634c8d59c.setIcon(icon_b799296257471d508d5f5627d483d124);
+            
+    
+            var marker_0ac96296e422f81888e5eedaf5d07e6d = L.marker(
+                [42.364664, -71.175693],
+                {
+}
+            ).addTo(map_1e2ed742dd0341b04eaa3a4f8455dec2);
+        
+    
+            var icon_ef253836be59360983206a174d3a6c0f = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "blue",
+  "iconColor": "white",
+  "icon": "bicycle",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_1bb234138b4a52be00acec7f84f23064 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_1f5bbba23bd25dbe93d8553c1d88e00c = $(`<div id="html_1f5bbba23bd25dbe93d8553c1d88e00c" style="width: 100.0%; height: 100.0%;"><b>160 Arsenal St</b><br>Lat: 42.364664<br>Lng: -71.175693</div>`)[0];
+                popup_1bb234138b4a52be00acec7f84f23064.setContent(html_1f5bbba23bd25dbe93d8553c1d88e00c);
+            
+        
+
+        marker_0ac96296e422f81888e5eedaf5d07e6d.bindPopup(popup_1bb234138b4a52be00acec7f84f23064)
+        ;
+
+        
+    
+    
+            marker_0ac96296e422f81888e5eedaf5d07e6d.bindTooltip(
+                `<div>
+                     160 Arsenal St
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_0ac96296e422f81888e5eedaf5d07e6d.setIcon(icon_ef253836be59360983206a174d3a6c0f);
+            
+    
+            var marker_f54d7a0e1c87983196417ba9b705cfaa = L.marker(
+                [42.364474, -71.128408],
+                {
+}
+            ).addTo(map_1e2ed742dd0341b04eaa3a4f8455dec2);
+        
+    
+            var icon_b2be1318fcedb1d7e036bf6fad7ca91b = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "blue",
+  "iconColor": "white",
+  "icon": "bicycle",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_c614fda7fb952c663e7ce4aebe121dec = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_bd88560d1f70b4dfad73caed921f2caf = $(`<div id="html_bd88560d1f70b4dfad73caed921f2caf" style="width: 100.0%; height: 100.0%;"><b>175 N Harvard St</b><br>Lat: 42.364474<br>Lng: -71.128408</div>`)[0];
+                popup_c614fda7fb952c663e7ce4aebe121dec.setContent(html_bd88560d1f70b4dfad73caed921f2caf);
+            
+        
+
+        marker_f54d7a0e1c87983196417ba9b705cfaa.bindPopup(popup_c614fda7fb952c663e7ce4aebe121dec)
+        ;
+
+        
+    
+    
+            marker_f54d7a0e1c87983196417ba9b705cfaa.bindTooltip(
+                `<div>
+                     175 N Harvard St
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_f54d7a0e1c87983196417ba9b705cfaa.setIcon(icon_b2be1318fcedb1d7e036bf6fad7ca91b);
+            
+    
+            var marker_3a45db5835fccc89b265cc759c005ed0 = L.marker(
+                [42.380323, -71.108786],
+                {
+}
+            ).addTo(map_1e2ed742dd0341b04eaa3a4f8455dec2);
+        
+    
+            var icon_9102687d116edf7f5c4c5804c2c3f7a5 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "blue",
+  "iconColor": "white",
+  "icon": "bicycle",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_93010998f8d4e269f0e75bbc0444b5c5 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_1f9c56e1061517402d76237668d9349a = $(`<div id="html_1f9c56e1061517402d76237668d9349a" style="width: 100.0%; height: 100.0%;"><b>191 Beacon St</b><br>Lat: 42.380323<br>Lng: -71.108786</div>`)[0];
+                popup_93010998f8d4e269f0e75bbc0444b5c5.setContent(html_1f9c56e1061517402d76237668d9349a);
+            
+        
+
+        marker_3a45db5835fccc89b265cc759c005ed0.bindPopup(popup_93010998f8d4e269f0e75bbc0444b5c5)
+        ;
+
+        
+    
+    
+            marker_3a45db5835fccc89b265cc759c005ed0.bindTooltip(
+                `<div>
+                     191 Beacon St
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_3a45db5835fccc89b265cc759c005ed0.setIcon(icon_9102687d116edf7f5c4c5804c2c3f7a5);
+            
+    
+            var poly_line_288c8a19ca651350f73dd6e9cfcc1e8a = L.polyline(
+                [[42.392568, -71.150761], [42.380323, -71.108786], [42.364474, -71.128408], [42.344148, -71.114673], [42.364664, -71.175693], [42.392568, -71.150761]],
+                {"bubblingMouseEvents": true, "color": "red", "dashArray": null, "dashOffset": null, "fill": false, "fillColor": "red", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 0.8, "smoothFactor": 1.0, "stroke": true, "weight": 3}
+            ).addTo(map_1e2ed742dd0341b04eaa3a4f8455dec2);
+        
+    
+        var popup_535bca43404b94ded2af8e85f2567a64 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_e4092cfc9923fd4521a2d5217a98c980 = $(`<div id="html_e4092cfc9923fd4521a2d5217a98c980" style="width: 100.0%; height: 100.0%;">TSP Route</div>`)[0];
+                popup_535bca43404b94ded2af8e85f2567a64.setContent(html_e4092cfc9923fd4521a2d5217a98c980);
+            
+        
+
+        poly_line_288c8a19ca651350f73dd6e9cfcc1e8a.bindPopup(popup_535bca43404b94ded2af8e85f2567a64)
+        ;
+
+        
+    
+    
+            poly_line_58796761f7b55a4043902a1ce66cb220.setText(
+                "\u2192",
+                {
+  "repeat": true,
+  "center": false,
+  "below": false,
+  "offset": 10,
+  "orientation": 0,
+  "attributes": {
+  "fill": "red",
+  "font-weight": "bold",
+  "font-size": "14",
+},
+}
+            );
+        
+</script>
+</html>
