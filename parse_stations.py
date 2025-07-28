@@ -1,107 +1,64 @@
-import json
 import numpy as np
-from python_tsp.exact import solve_tsp_dynamic_programming
 from python_tsp.heuristics import solve_tsp_simulated_annealing
 import folium
 from folium import plugins
 import csv
 
-def parse_stations(file_path):
+def load_stations(file_path='stations.csv'):
     """
-    Parses a JSON file containing station data and returns a list of stations.
+    Load station data from CSV file.
 
     Args:
-        file_path (str): The path to the JSON file containing station data.
+        file_path (str): The path to the CSV file containing station data.
 
     Returns:
-        list: A list of dictionaries, each representing a station.
+        list: A list of stations as [name, lat, lng], indexed by station ID.
     """
-    with open(file_path, 'r') as file:
-        data = json.load(file)
-
-    stations = data.get('data', {}).get('supply', {}).get('stations', [])
-
-    parsed_stations = []
-    for station in stations:
-        parsed_stations.append([station["stationName"], station["location"]["lat"], station["location"]["lng"]])
-
-    # Sort stations by name
-    parsed_stations.sort(key=lambda x: x[0])
-    
-    # Add incremental IDs and write to CSV
-    csv_data = []
-    for i, station in enumerate(parsed_stations):
-        station_with_id = [i, station[0], station[1], station[2]]
-        csv_data.append(station_with_id)
-    
-    # Write to CSV file
-    with open('stations.csv', 'w', newline='', encoding='utf-8') as csvfile:
-        writer = csv.writer(csvfile)
-        writer.writerow(['id', 'station_name', 'lat', 'lng'])
-        writer.writerows(csv_data)
-    
-    return parsed_stations
+    stations = []
+    with open(file_path, 'r', newline='', encoding='utf-8') as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            stations.append([row['station_name'], float(row['lat']), float(row['lng'])])
+    return stations
 
 
-def haversine_distance(lat1, lon1, lat2, lon2):
+def load_distance_matrix(file_path='distance_matrix.csv'):
     """
-    Calculate the great circle distance between two points 
-    on the earth (specified in decimal degrees) using the Haversine formula.
+    Load the distance matrix from CSV file.
     
     Args:
-        lat1, lon1: Latitude and longitude of first point
-        lat2, lon2: Latitude and longitude of second point
-    
-    Returns:
-        float: Distance in kilometers
-    """
-    # Convert decimal degrees to radians
-    lat1, lon1, lat2, lon2 = map(np.radians, [lat1, lon1, lat2, lon2])
-    
-    # Haversine formula
-    dlat = lat2 - lat1
-    dlon = lon2 - lon1
-    a = np.sin(dlat/2)**2 + np.cos(lat1) * np.cos(lat2) * np.sin(dlon/2)**2
-    c = 2 * np.arcsin(np.sqrt(a))
-    
-    # Radius of earth in kilometers
-    r = 6371
-    return c * r
-
-
-def create_distance_matrix(stations):
-    """
-    Create a distance matrix for all stations using Haversine distance.
-    
-    Args:
-        stations (list): List of stations [name, lat, lng]
+        file_path (str): Path to the distance matrix CSV file
     
     Returns:
         numpy.ndarray: Distance matrix where element [i][j] is distance from station i to station j
     """
-    n = len(stations)
-    distance_matrix = np.zeros((n, n))
+    distances = []
+    with open(file_path, 'r', newline='', encoding='utf-8') as csvfile:
+        reader = csv.reader(csvfile)
+        # Skip the header row
+        next(reader)
+        
+        for row in reader:
+            # Skip the first column (id) and convert the rest to float
+            distance_row = [float(val) for val in row[1:]]
+            distances.append(distance_row)
     
-    for i in range(n):
-        for j in range(n):
-            if i < j:
-                lat1, lon1 = stations[i][1], stations[i][2]
-                lat2, lon2 = stations[j][1], stations[j][2]
-                distance_matrix[i][j] = haversine_distance(lat1, lon1, lat2, lon2)
-            if i > j:
-                distance_matrix[i][j] = distance_matrix[j][i]
+    # Convert to numpy array
+    distance_matrix = np.array(distances)
+    
+    # Convert from meters to kilometers (assuming the CSV contains meters)
+    distance_matrix = distance_matrix / 1000.0
     
     return distance_matrix
 
 
-def traveling_salesman_approximation(stations):
+def traveling_salesman_approximation(stations, distance_matrix=None):
     """
     Solve the traveling salesman problem approximately for bike stations.
     
     Args:
         stations (list): List of stations [name, lat, lng]
-        method (str): Algorithm to use ('simulated_annealing' or 'dynamic_programming')
-                     Note: dynamic_programming is exact but only works for small datasets (<20 stations)
+        distance_matrix (numpy.ndarray): Precomputed distance matrix. If None, will load from file.
     
     Returns:
         tuple: (route, total_distance) where route is list of station indices and 
@@ -113,12 +70,19 @@ def traveling_salesman_approximation(stations):
     if len(stations) == 1:
         return [0], 0
     
-    # Create distance matrix
-    distance_matrix = create_distance_matrix(stations)
+    # Load distance matrix if not provided
+    if distance_matrix is None:
+        distance_matrix = load_distance_matrix()
+    
+    # If we're using a subset of stations, extract the relevant submatrix
+    n_stations = len(stations)
+    if distance_matrix.shape[0] > n_stations:
+        # Assuming we're using the first n_stations from the full matrix
+        distance_matrix = distance_matrix[:n_stations, :n_stations]
     
     try:
         # Use simulated annealing for larger datasets or if specified
-        return solve_tsp_simulated_annealing(distance_matrix)
+        return solve_tsp_simulated_annealing(distance_matrix, alpha=0.99)
     
     except Exception as e:
         print(f"Error solving TSP: {e}")
@@ -126,7 +90,7 @@ def traveling_salesman_approximation(stations):
         return list(range(len(stations))), np.sum(distance_matrix[0])
 
 
-def export_tsp_route(stations, route, total_distance, filename='tsp_route.csv'):
+def export_tsp_route(stations, route, total_distance, distance_matrix=None, filename='tsp_route.csv'):
     """
     Export the TSP route to a CSV file with detailed information.
     
@@ -134,9 +98,14 @@ def export_tsp_route(stations, route, total_distance, filename='tsp_route.csv'):
         stations (list): List of stations [name, lat, lng]
         route (list): List of station indices representing the route
         total_distance (float): Total distance of the route in kilometers
+        distance_matrix (numpy.ndarray): Precomputed distance matrix. If None, will load from file.
         filename (str): Output CSV filename
     """
     print(f"\nOptimal route ({total_distance:.2f} km total):")
+    
+    # Load distance matrix if not provided
+    if distance_matrix is None:
+        distance_matrix = load_distance_matrix()
     
     csv_data = []
     cumulative_distance = 0.0
@@ -146,17 +115,14 @@ def export_tsp_route(stations, route, total_distance, filename='tsp_route.csv'):
         lat = stations[station_idx][1]
         lng = stations[station_idx][2]
         
-        # Calculate distance to next station
+        # Calculate distance to next station using distance matrix
         if i < len(route) - 1:
             next_station_idx = route[i + 1]
-            next_lat = stations[next_station_idx][1]
-            next_lng = stations[next_station_idx][2]
-            distance_to_next = haversine_distance(lat, lng, next_lat, next_lng)
+            distance_to_next = distance_matrix[station_idx][next_station_idx]
         else:
             # Distance back to start station
-            start_lat = stations[route[0]][1]
-            start_lng = stations[route[0]][2]
-            distance_to_next = haversine_distance(lat, lng, start_lat, start_lng)
+            start_station_idx = route[0]
+            distance_to_next = distance_matrix[station_idx][start_station_idx]
         
         # Add to CSV data
         csv_data.append({
@@ -331,18 +297,24 @@ def run_tsp_analysis(stations, max_stations=None, visualize=True):
     """
     print(f"Total stations available: {len(stations)}")
     
+    # Load the distance matrix once
+    distance_matrix = load_distance_matrix()
+    
     # Select subset if needed
     if max_stations is None or len(stations) < max_stations:
         selected_stations = stations
+        selected_matrix = distance_matrix
     else:
         selected_stations = stations[:max_stations]
+        # Extract submatrix for selected stations
+        selected_matrix = distance_matrix[:max_stations, :max_stations]
         print(f"Using first {max_stations} stations for analysis")
     
     print(f"\nSolving TSP for {len(selected_stations)} stations...")
     
-    route, total_distance = traveling_salesman_approximation(selected_stations)
+    route, total_distance = traveling_salesman_approximation(selected_stations, selected_matrix)
     
-    export_tsp_route(selected_stations, route, total_distance, 'blue_bikes_route.csv')
+    export_tsp_route(selected_stations, route, total_distance, selected_matrix, 'blue_bikes_route.csv')
     
     if visualize:
         visualize_tsp_solution(selected_stations, route, total_distance)
@@ -351,7 +323,8 @@ def run_tsp_analysis(stations, max_stations=None, visualize=True):
 
 
 if __name__ == "__main__":
-    stations = parse_stations("stations.json")
+    # Load stations from CSV file
+    stations = load_stations("stations.csv")
     
     # Run TSP analysis with visualization
     # You can adjust max_stations (up to ~20 for exact algorithm, more for approximation)

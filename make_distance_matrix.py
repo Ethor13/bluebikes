@@ -8,7 +8,7 @@ OSRM_URL = "http://localhost:5000/route/v1/bicycle"
 INPUT_FILE = "stations.csv"       # CSV with columns: id, station_name, lat, lng
 METRIC = "distance"
 OUTPUT_FILE = f"{METRIC}_matrix.csv"
-REQUEST_DELAY = 0.005               # Delay between requests (5ms)
+REQUEST_DELAY = 0.001               # Delay between requests (5ms)
 
 def load_stations(file_path):
     stations = []
