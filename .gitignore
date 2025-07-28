@@ -2,3 +2,10 @@
 # pixi environments
 .pixi
 *.egg-info
+
+# osrm files
+bike-osrm
+
+# large outputs
+distance_matrix.csv
+duration_matrix.csv

@@ -25,6 +25,21 @@ def parse_stations(file_path):
     for station in stations:
         parsed_stations.append([station["stationName"], station["location"]["lat"], station["location"]["lng"]])
 
+    # Sort stations by name
+    parsed_stations.sort(key=lambda x: x[0])
+    
+    # Add incremental IDs and write to CSV
+    csv_data = []
+    for i, station in enumerate(parsed_stations):
+        station_with_id = [i, station[0], station[1], station[2]]
+        csv_data.append(station_with_id)
+    
+    # Write to CSV file
+    with open('stations.csv', 'w', newline='', encoding='utf-8') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(['id', 'station_name', 'lat', 'lng'])
+        writer.writerows(csv_data)
+    
     return parsed_stations
 
 
