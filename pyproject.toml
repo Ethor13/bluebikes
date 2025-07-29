@@ -1,0 +1,31 @@
+[project]
+authors = [{name = "Ethan Orlowsky", email = "ethaniorlowsky@gmail.com"}]
+dependencies = [
+    "python-tsp",
+    "numpy",
+    "matplotlib",
+    "folium",
+    "tqdm"
+]
+name = "bluebikes"
+requires-python = ">= 3.13"
+version = "0.1.0"
+
+[build-system]
+build-backend = "hatchling.build"
+requires = ["hatchling"]
+
+[tool.pixi.project]
+channels = ["conda-forge"]
+platforms = ["linux-64"]
+
+[tool.pixi.pypi-dependencies]
+bluebikes = { path = ".", editable = true }
+
+[tool.pixi.tasks]
+distance-matrix = "python scripts/preprocessing/make_distance_matrix.py"
+shortest-distance = "python scripts/tsp/get_shortest_distance_route.py"
+osrm = "python scripts/tsp/get_osrm_route.py"
+haversine = "python scripts/tsp/get_haversine_route.py"
+local = "python scripts/local-search/local_search.py"
+directions = "python scripts/tsp/get_directions.py"
