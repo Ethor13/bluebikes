@@ -87,7 +87,7 @@ packages:
 - pypi: .
   name: bluebikes
   version: 0.1.0
-  sha256: 0853e2d9dcf128389ca717281d1279e0cb0fe5aef8ff912326e3d46c9d123766
+  sha256: c621e5734835c03a0a97ca67ebd94756f2458abb2df081ec5eff274e9e0717bb
   requires_dist:
   - python-tsp
   - numpy

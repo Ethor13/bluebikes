@@ -23,9 +23,9 @@ platforms = ["linux-64"]
 bluebikes = { path = ".", editable = true }
 
 [tool.pixi.tasks]
-distance-matrix = "python scripts/preprocessing/make_distance_matrix.py"
-shortest-distance = "python scripts/tsp/get_shortest_distance_route.py"
-osrm = "python scripts/tsp/get_osrm_route.py"
-haversine = "python scripts/tsp/get_haversine_route.py"
-local = "python scripts/local-search/local_search.py"
-directions = "python scripts/tsp/get_directions.py"
+distance-matrix = "python bluebikes/preprocessing/make_distance_matrix.py"
+shortest-distance = "python bluebikes/tsp/get_shortest_distance_route.py"
+osrm = "python bluebikes/tsp/get_osrm_route.py"
+haversine = "python bluebikes/tsp/get_haversine_route.py"
+local = "python bluebikes/local-search/local_search.py"
+directions = "python bluebikes/tsp/get_directions.py"
