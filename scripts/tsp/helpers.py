@@ -18,10 +18,12 @@ def load_stations():
 
 def write_route_to_csv(route, output_file):
     with open(output_file, 'w', newline='', encoding='utf-8') as csvfile:
-        fieldnames = ['stop_number', 'station_name', 'lat', 'lng', 'distance_to_next_km', 'cumulative_distance_km']
+        fieldnames = ['stop_number', 'station_id', 'station_name', 'lat', 'lng', 'distance_to_next_km', 'cumulative_distance_km']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(route)
+
+    print(f"Route written to {output_file}. Total Distance: {route[-1]['cumulative_distance_km']} km")
 
 def load_route(filename: str):
     """
@@ -36,6 +38,7 @@ def load_route(filename: str):
         for row in reader:
             route_data.append({
                 'stop_number': int(row['stop_number']),
+                'station_id': int(row['station_id']),
                 'station_name': row['station_name'],
                 'lat': float(row['lat']),
                 'lng': float(row['lng']),
@@ -141,6 +144,7 @@ def format_python_tsp_route(stations, route):
         # Add to CSV data
         csv_data.append({
             "stop_number": i + 1,
+            "station_id": station["id"],
             "station_name": station["station_name"],
             "lat": station["lat"],
             "lng": station["lng"],

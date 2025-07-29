@@ -12,6 +12,7 @@ def format_osrm_route(data, stations):
 
         route.append({
             "stop_number": waypoint["waypoint_index"],
+            "station_id": station["id"],
             "station_name": station["station_name"],
             "lat": station["lat"],
             "lng": station["lng"],
@@ -44,4 +45,4 @@ def main(max_stations=None):
 
 
 if __name__ == "__main__":
-    main(5)
+    main()

@@ -12,6 +12,8 @@ shortest-distance = "python scripts/tsp/get_shortest_distance_route.py"
 osrm = "python scripts/tsp/get_osrm_route.py"
 haversine = "python scripts/tsp/get_haversine_route.py"
 
+local = "python scripts/local-search/local_search.py"
+
 directions = "python scripts/tsp/get_directions.py"
 
 [dependencies]
