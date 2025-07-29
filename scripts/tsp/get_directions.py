@@ -1,41 +1,21 @@
-import csv
 import json
 import requests
-import time
+import folium
 from typing import List, Dict, Tuple
+from helpers import load_route
 
 # OSRM settings
 OSRM_URL = "http://localhost:5000/route/v1/bicycle"
+ROUTE_FILE = 'outputs/routes/osrm_route.csv'
 REQUEST_DELAY = 0.01  # Small delay between requests to avoid overwhelming the server
-
-def load_route_from_csv(filename: str) -> List[Dict]:
-    """
-    Load the route data from the CSV file.
-    
-    Returns:
-        List of dictionaries with station data
-    """
-    route_data = []
-    with open(filename, 'r', encoding='utf-8') as file:
-        reader = csv.DictReader(file)
-        for row in reader:
-            route_data.append({
-                'stop_number': int(row['stop_number']),
-                'station_name': row['station_name'],
-                'latitude': float(row['latitude']),
-                'longitude': float(row['longitude']),
-                'distance_to_next_km': float(row['distance_to_next_km']),
-                'cumulative_distance_km': float(row['cumulative_distance_km'])
-            })
-    return route_data
 
 def get_route_geometry(start_coords: Tuple[float, float], end_coords: Tuple[float, float], retries: int = 3) -> Dict:
     """
     Get detailed route geometry from OSRM for a segment.
     
     Args:
-        start_coords: (longitude, latitude) tuple for start point
-        end_coords: (longitude, latitude) tuple for end point
+        start_coords: (lng, lat) tuple for start point
+        end_coords: (lng, lat) tuple for end point
         retries: Number of retry attempts
         
     Returns:
@@ -53,37 +33,25 @@ def get_route_geometry(start_coords: Tuple[float, float], end_coords: Tuple[floa
         'annotations': 'true'  # Include additional route annotations
     }
     
-    for attempt in range(retries):
-        try:
-            response = requests.get(url, params=params, timeout=10)
-            response.raise_for_status()
-            data = response.json()
-            
-            if data.get('code') == 'Ok' and data.get('routes'):
-                route = data['routes'][0]
-                return {
-                    'geometry': route['geometry'],
-                    'distance': route['distance'],  # in meters
-                    'duration': route['duration'],  # in seconds
-                    'legs': route.get('legs', []),
-                    'waypoints': data.get('waypoints', [])
-                }
-            else:
-                print(f"OSRM error: {data.get('message', 'Unknown error')}")
-                
-        except requests.exceptions.RequestException as e:
-            print(f"Request failed (attempt {attempt + 1}/{retries}): {e}")
-            if attempt < retries - 1:
-                time.sleep(1)
-        except Exception as e:
-            print(f"Unexpected error (attempt {attempt + 1}/{retries}): {e}")
-            if attempt < retries - 1:
-                time.sleep(1)
+    res = requests.get(url, params=params)
+    res.raise_for_status()
+    data = res.json()
     
-    print(f"Failed to get route after {retries} attempts")
-    return None
+    if data.get('code') == 'Ok' and data.get('routes'):
+        route = data['routes'][0]
+        return {
+            'geometry': route['geometry'],
+            'distance': route['distance'],  # in meters
+            'duration': route['duration'],  # in seconds
+            'legs': route.get('legs', []),
+            'waypoints': data.get('waypoints', [])
+        }
+    else:
+        print(f"OSRM error: {data.get('message', 'Unknown error')}")
+        return None
+    
 
-def get_all_route_segments(route_data: List[Dict]) -> List[Dict]:
+def get_all_route_segments(route: List[Dict]) -> List[Dict]:
     """
     Get detailed routing information for all segments in the route.
     
@@ -94,63 +62,29 @@ def get_all_route_segments(route_data: List[Dict]) -> List[Dict]:
         List of route segments with detailed geometry
     """
     segments = []
-    
-    print(f"Getting detailed routing for {len(route_data)} stations...")
-    
-    for i in range(len(route_data)):
-        current_station = route_data[i]
+    for i in range(len(route)):
+        station = route[i]
+        next_station = route[(i + 1) % len(route)]
         
-        # Get next station (or loop back to first station for the last segment)
-        if i < len(route_data) - 1:
-            next_station = route_data[i + 1]
-        else:
-            # This is the return to start segment
-            next_station = route_data[0]
-        
-        print(f"Processing segment {i + 1}/{len(route_data)}: {current_station['station_name']} → {next_station['station_name']}")
-        
-        # Get route geometry
-        start_coords = (current_station['longitude'], current_station['latitude'])
-        end_coords = (next_station['longitude'], next_station['latitude'])
+        start_coords = (station['lng'], station['lat'])
+        end_coords = (next_station['lng'], next_station['lat'])
         
         route_info = get_route_geometry(start_coords, end_coords)
         
-        if route_info:
-            segment = {
-                'segment_id': i + 1,
-                'from_station': current_station['station_name'],
-                'to_station': next_station['station_name'],
-                'from_coords': [current_station['latitude'], current_station['longitude']],
-                'to_coords': [next_station['latitude'], next_station['longitude']],
-                'distance_meters': route_info['distance'],
-                'distance_km': route_info['distance'] / 1000,
-                'duration_seconds': route_info['duration'],
-                'duration_minutes': route_info['duration'] / 60,
-                'geometry': route_info['geometry'],
-                'legs': route_info['legs'],
-                'waypoints': route_info['waypoints']
-            }
-            segments.append(segment)
-        else:
-            print(f"⚠️  Warning: Could not get routing for segment {i + 1}")
-            # Fallback to straight line
-            segments.append({
-                'segment_id': i + 1,
-                'from_station': current_station['station_name'],
-                'to_station': next_station['station_name'],
-                'from_coords': [current_station['latitude'], current_station['longitude']],
-                'to_coords': [next_station['latitude'], next_station['longitude']],
-                'distance_meters': current_station['distance_to_next_km'] * 1000,
-                'distance_km': current_station['distance_to_next_km'],
-                'duration_seconds': None,
-                'duration_minutes': None,
-                'geometry': None,  # No geometry available
-                'legs': [],
-                'waypoints': []
-            })
-        
-        # Small delay to be nice to the OSRM server
-        time.sleep(REQUEST_DELAY)
+        segments.append({
+            'segment_id': i + 1,
+            'from_station': station['station_name'],
+            'to_station': next_station['station_name'],
+            'from_coords': [station['lat'], station['lng']],
+            'to_coords': [next_station['lat'], next_station['lng']],
+            'distance_meters': route_info['distance'],
+            'distance_km': route_info['distance'] / 1000,
+            'duration_seconds': route_info['duration'],
+            'duration_minutes': route_info['duration'] / 60,
+            'geometry': route_info['geometry'],
+            'legs': route_info['legs'],
+            'waypoints': route_info['waypoints']
+        })
     
     return segments
 
@@ -166,14 +100,12 @@ def create_geojson_output(route_data: List[Dict], segments: List[Dict]) -> Dict:
         GeoJSON FeatureCollection
     """
     features = []
-    
-    # Add station points
     for station in route_data:
         point_feature = {
             "type": "Feature",
             "geometry": {
                 "type": "Point",
-                "coordinates": [station['longitude'], station['latitude']]
+                "coordinates": [station['lng'], station['lat']]
             },
             "properties": {
                 "type": "station",
@@ -206,19 +138,7 @@ def create_geojson_output(route_data: List[Dict], segments: List[Dict]) -> Dict:
         "features": features
     }
 
-def save_enhanced_route_data(segments: List[Dict], filename: str = 'blue_bikes_detailed_route.json'):
-    """
-    Save the detailed route data as JSON.
-    
-    Args:
-        segments: List of route segments
-        filename: Output filename
-    """
-    with open(filename, 'w', encoding='utf-8') as file:
-        json.dump(segments, file, indent=2, ensure_ascii=False)
-    print(f"Detailed route data saved to '{filename}'")
-
-def create_folium_map_with_routes(route_data: List[Dict], segments: List[Dict], filename: str = 'blue_bikes_route_detailed.html'):
+def create_folium_map_with_routes(route_data: List[Dict], segments: List[Dict], filename: str):
     """
     Create an interactive map with the actual routing paths.
     
@@ -227,23 +147,16 @@ def create_folium_map_with_routes(route_data: List[Dict], segments: List[Dict], 
         segments: Route segments with geometry
         filename: Output HTML filename
     """
-    try:
-        import folium
-        from folium import plugins
-    except ImportError:
-        print("❌ Folium not available. Install with: pip install folium")
-        return
-    
     # Calculate center point
-    lats = [station['latitude'] for station in route_data]
-    lngs = [station['longitude'] for station in route_data]
+    lats = [station['lat'] for station in route_data]
+    lngs = [station['lng'] for station in route_data]
     center_lat = sum(lats) / len(lats)
     center_lng = sum(lngs) / len(lngs)
     
     # Create map
     m = folium.Map(
         location=[center_lat, center_lng],
-        zoom_start=10,
+        zoom_start=13,
         tiles='OpenStreetMap'
     )
     
@@ -252,12 +165,12 @@ def create_folium_map_with_routes(route_data: List[Dict], segments: List[Dict], 
         popup_text = f"""
         <b>{station['station_name']}</b><br>
         Stop #{station['stop_number']}<br>
-        Coordinates: {station['latitude']:.6f}, {station['longitude']:.6f}<br>
+        Coordinates: {station['lat']:.6f}, {station['lng']:.6f}<br>
         Cumulative Distance: {station['cumulative_distance_km']:.2f} km
         """
         
         folium.Marker(
-            location=[station['latitude'], station['longitude']],
+            location=[station['lat'], station['lng']],
             popup=folium.Popup(popup_text, max_width=300),
             tooltip=f"Stop {station['stop_number']}: {station['station_name']}",
             icon=folium.Icon(color='blue', icon='bicycle', prefix='fa')
@@ -301,82 +214,27 @@ def create_folium_map_with_routes(route_data: List[Dict], segments: List[Dict], 
         <p><b>Blue Bikes TSP Route</b></p>
         <p><i class="fa fa-bicycle" style="color:blue"></i> Bike Station</p>
         <p><span style="color:red; font-weight:bold;">━━━</span> Bike Route</p>
-        <p><b>Stations:</b> {len(route_data)}</p>
-        <p><b>Route Segments:</b> {total_segments_with_geometry}/{len(segments)}</p>
     </div>
     '''
     m.get_root().html.add_child(folium.Element(legend_html))
     
     # Save map
     m.save(filename)
-    print(f"Interactive map with detailed routes saved to '{filename}'")
-    print(f"📍 Mapped {len(route_data)} stations with {total_segments_with_geometry} detailed route segments")
 
-def main():
+def main(route_file):
     """Main function to process the route and get detailed directions."""
-    input_file = 'blue_bikes_route.csv'
+    route = load_route(route_file)
+
+    route_file_stem = route_file.split('.')[0].split('/')[-1]
+
+    segments = get_all_route_segments(route)
+    with open(f'outputs/directions/{route_file_stem}_directions.json', 'w', encoding='utf-8') as file:
+        json.dump(segments, file, indent=2, ensure_ascii=False)
     
-    print("🚴 Blue Bikes Route Direction Generator")
-    print("=" * 50)
-    
-    # Check if OSRM server is running
-    try:
-        response = requests.get(f"{OSRM_URL.replace('/route/v1/bicycle', '')}/", timeout=5)
-        print("✅ OSRM server is running")
-    except:
-        print("❌ OSRM server not available at localhost:5000")
-        print("   Please start the OSRM server with: ./init_osrm.sh")
-        return
-    
-    # Load route data
-    print(f"\n📄 Loading route data from '{input_file}'...")
-    try:
-        route_data = load_route_from_csv(input_file)
-        print(f"✅ Loaded {len(route_data)} stations")
-    except FileNotFoundError:
-        print(f"❌ File '{input_file}' not found")
-        return
-    except Exception as e:
-        print(f"❌ Error loading file: {e}")
-        return
-    
-    # Get detailed routing for all segments
-    print(f"\n🛣️  Getting detailed routing information...")
-    segments = get_all_route_segments(route_data)
-    
-    successful_segments = sum(1 for seg in segments if seg['geometry'] is not None)
-    print(f"✅ Successfully got routing for {successful_segments}/{len(segments)} segments")
-    
-    # Save detailed route data
-    print(f"\n💾 Saving detailed route data...")
-    save_enhanced_route_data(segments)
-    
-    # Create GeoJSON output
-    geojson_data = create_geojson_output(route_data, segments)
-    with open('blue_bikes_route.geojson', 'w', encoding='utf-8') as file:
+    geojson_data = create_geojson_output(route, segments)
+    with open(f'outputs/directions/{route_file_stem}_directions.geojson', 'w', encoding='utf-8') as file:
         json.dump(geojson_data, file, indent=2)
-    print("✅ GeoJSON saved to 'blue_bikes_route.geojson'")
-    
-    # Create interactive map
-    print(f"\n🗺️  Creating interactive map...")
-    create_folium_map_with_routes(route_data, segments)
-    
-    # Summary
-    total_distance = sum(seg['distance_km'] for seg in segments if seg['distance_km'])
-    total_duration = sum(seg['duration_minutes'] for seg in segments if seg['duration_minutes'])
-    
-    print(f"\n📊 Route Summary:")
-    print(f"   • Total Stations: {len(route_data)}")
-    print(f"   • Total Distance: {total_distance:.2f} km")
-    if total_duration:
-        print(f"   • Estimated Duration: {total_duration:.1f} minutes ({total_duration/60:.1f} hours)")
-    print(f"   • Route Segments with Geometry: {successful_segments}/{len(segments)}")
-    
-    print(f"\n🎉 Route processing complete!")
-    print(f"   Files generated:")
-    print(f"   • blue_bikes_detailed_route.json (detailed route data)")
-    print(f"   • blue_bikes_route.geojson (GeoJSON format)")
-    print(f"   • blue_bikes_route_detailed.html (interactive map)")
+    create_folium_map_with_routes(route, segments, f'outputs/maps/{route_file_stem}_detailed.html')
 
 if __name__ == "__main__":
-    main()
+    main(ROUTE_FILE)

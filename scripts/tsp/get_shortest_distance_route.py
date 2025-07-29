@@ -1,6 +1,8 @@
 from python_tsp.heuristics import solve_tsp_simulated_annealing
-from helpers import load_stations, create_interactive_map, load_distance_matrix, format_python_tsp_route, write_route_to_csv, create_interactive_map
+from helpers import load_stations, load_distance_matrix, format_python_tsp_route, write_route_to_csv
+from get_directions import main as create_map_w_directions
 
+ROUTE_FILE = "outputs/routes/shortest_distance_route.csv"
 
 def main(max_stations=None):
     """
@@ -19,10 +21,10 @@ def main(max_stations=None):
     distance_matrix = load_distance_matrix("distance")
     selected_matrix = distance_matrix[:max_stations, :max_stations] if max_stations else distance_matrix
     
-    raw_route, _ = solve_tsp_simulated_annealing(selected_matrix, alpha=0.90)
+    raw_route, _ = solve_tsp_simulated_annealing(selected_matrix)
     route = format_python_tsp_route(selected_stations, raw_route)
-    write_route_to_csv(route, 'outputs/routes/shortest_distance_route.csv')
-    create_interactive_map(selected_stations, route, 'outputs/maps/shortest_distance_map.html')
+    write_route_to_csv(route, ROUTE_FILE)
+    create_map_w_directions(ROUTE_FILE)
 
 
 if __name__ == "__main__":

@@ -1,8 +1,9 @@
 import requests
-from helpers import load_stations, write_route_to_csv, create_interactive_map
+from helpers import load_stations, write_route_to_csv
+from get_directions import main as create_map_w_directions
 
 OSRM_URL = "http://localhost:5000/trip/v1/bicycle"
-OUTPUT_FILE = "outputs/routes/osrm_route.csv"
+ROUTE_FILE = "outputs/routes/osrm_route.csv"
 
 def format_osrm_route(data, stations):
     route = []
@@ -38,8 +39,8 @@ def main(max_stations=None):
     raw_route = r.json()
 
     route = format_osrm_route(raw_route, selected_stations)
-    write_route_to_csv(route, OUTPUT_FILE)
-    create_interactive_map(selected_stations, route, 'outputs/maps/osrm_map.html')
+    write_route_to_csv(route, ROUTE_FILE)
+    create_map_w_directions(ROUTE_FILE)
 
 
 if __name__ == "__main__":

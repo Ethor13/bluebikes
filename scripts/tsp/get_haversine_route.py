@@ -1,6 +1,8 @@
 from python_tsp.heuristics import solve_tsp_simulated_annealing
-from helpers import load_stations, get_haversine_distance_matrix, write_route_to_csv, create_interactive_map, format_python_tsp_route
+from helpers import load_stations, get_haversine_distance_matrix, write_route_to_csv, format_python_tsp_route
+from get_directions import main as create_map_w_directions
 
+ROUTE_FILE = "outputs/routes/haversine_route.csv"
 
 def main(max_stations=None):
     """
@@ -20,8 +22,8 @@ def main(max_stations=None):
 
     raw_route, _ = solve_tsp_simulated_annealing(distance_matrix)
     route = format_python_tsp_route(selected_stations, raw_route)
-    write_route_to_csv(route, 'outputs/routes/haversine_route.csv')
-    create_interactive_map(selected_stations, route, 'outputs/maps/haversine_map.html')
+    write_route_to_csv(route, ROUTE_FILE)
+    create_map_w_directions(ROUTE_FILE)
 
 
 if __name__ == "__main__":

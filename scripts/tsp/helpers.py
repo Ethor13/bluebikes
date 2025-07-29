@@ -23,6 +23,27 @@ def write_route_to_csv(route, output_file):
         writer.writeheader()
         writer.writerows(route)
 
+def load_route(filename: str):
+    """
+    Load the route data from the CSV file.
+    
+    Returns:
+        List of dictionaries with station data
+    """
+    route_data = []
+    with open(filename, 'r', encoding='utf-8') as file:
+        reader = csv.DictReader(file)
+        for row in reader:
+            route_data.append({
+                'stop_number': int(row['stop_number']),
+                'station_name': row['station_name'],
+                'lat': float(row['lat']),
+                'lng': float(row['lng']),
+                'distance_to_next_km': float(row['distance_to_next_km']),
+                'cumulative_distance_km': float(row['cumulative_distance_km'])
+            })
+    return route_data
+
 def haversine_distance(lat1, lon1, lat2, lon2):
     """
     Calculate the great circle distance between two points 
